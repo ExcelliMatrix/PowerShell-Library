@@ -2,6 +2,8 @@
 #                                                                  #
 # Copyright (c) 2016-2017 ExcelliMatrix, Inc. All Rights Reserved. #
 #                                                                  #
+# Provided under MIT license                                       #
+#                                                                  #
 ####################################################################
 
 param

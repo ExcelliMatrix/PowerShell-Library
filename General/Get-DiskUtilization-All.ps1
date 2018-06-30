@@ -1,6 +1,6 @@
 ﻿####################################################################
 #                                                                  #
-# Copyright (c) 2016-2017 ExcelliMatrix, Inc. All Rights Reserved. #
+# Copyright (c) 2016 ExcelliMatrix, Inc. All Rights Reserved.      #
 #                                                                  #
 # Provided under MIT license                                       #
 #                                                                  #

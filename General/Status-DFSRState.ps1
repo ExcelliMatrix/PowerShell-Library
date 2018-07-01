@@ -24,6 +24,7 @@ Add-Type @"
     public string ComputerName;
     public string FileName;
     public string UpdateState;
+    public bool   Inbound;
     public string SourceComputerName;
     public string Path;
     public long   FileSize;
@@ -58,15 +59,32 @@ foreach ($ComputerName in $ComputerNames)
     $DFSRStateItem.ComputerName       = $ComputerName
     $DFSRStateItem.FileName           = $Result.FileName
     $DFSRStateItem.UpdateState        = $Result.UpdateState
+    $DFSRStateItem.Inbound            = $Result.Inbound
     $DFSRStateItem.SourceComputerName = $Result.SourceComputerName
     $DFSRStateItem.Path               = $Result.Path
     $DFSRStateItem.FileSize           = 0
+
+    if ($Result.Path -ne "")
+    {
+      $SourceComputerName = $ComputerName
+      if (($Result.SourceComputerName -ne "") -and ($Result.UpdateState -ne "Waiting"))
+      {
+        $SourceComputerName = $Result.SourceComputerName
+      }
+      $FileName = "\\$SourceComputerName\$($DFSRStateItem.Path.Replace(':', '$'))"
+      $FileSize = 0
+      if([System.IO.File]::Exists($FileName))
+      {
+        $FileSize = (Get-Item "$FileName").Length
+      }
+      $DFSRStateItem.FileSize = $FileSize
+    }
 
     $DFSRStateItems += $DFSRStateItem
   }
 }
 if ($ShowDetail -eq $true)
 {
-  $DFSRStateItems | Sort-Object Inbound, UpdateState -Descending | Format-Table ComputerName, FileName, UpdateState, Inbound, SourceComputerName, Path -auto
+  $DFSRStateItems | Sort-Object Inbound, UpdateState -Descending | Format-Table ComputerName, FileName, FileSize, UpdateState, Inbound, SourceComputerName, Path -auto
 }
 $DFSRStateItems | Group-Object ComputerName, UpdateState | Select Name, Count | Sort-Object Name | Format-Table -AutoSize

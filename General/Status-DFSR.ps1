@@ -6,13 +6,27 @@
 #                                                                  #
 ####################################################################
 
+param
+(
+  [string] $GroupName = "",
+  [string] $DomainName = "",
+  [string] $SourceComputerName = "",
+  [string] $DestinationComputerName = "",
+  [string] $OutputPath = "C:\Trash"
+)
+
 [DateTime]$ReportDateTime = [DateTime]::Now
-[String]$ReportDate = $ReportDateTime.ToString("ddMMMyyyy")
-[String]$ReportTime = $ReportDateTime.ToString("HHmm")
+[string]$ReportDate = $ReportDateTime.ToString("ddMMMyyyy")
+[string]$ReportTime = $ReportDateTime.ToString("HHmm")
+[string]$FileName = "$($OutputPath)\DFSReports\Health-$($GroupName)-$ReportDate-$ReportTime.html"
+
 Write-Host
 Write-Host
-Get-DfsrBacklog -GroupName "WDS Shares" -SourceComputerName "vmStorageBZ" -DestinationComputerName "vmStroageCO" –Verbose | Format-Table -Property FullPathName | Select -First 10
+Get-DfsrBacklog -GroupName "$GroupName" -SourceComputerName "$SourceComputerName" -DestinationComputerName "$DestinationComputerName" –Verbose | Format-Table -Property FullPathName | Select -First 10
+
 Write-Host
 Write-Host
-Write-DfsrHealthReport -GroupName "WDS Shares" -ReferenceComputerName "vmStorageBZ" -MemberComputerName "vmStorageBZ","vmStroageCO" -Path "C:\Trash" -DomainName "Wildfire.local" -CountFiles
-."C:\Program Files\Internet Explorer\iexplore.exe" "C:\Trash\Health-vmStorage-$ReportDate-$ReportTime.html"
+Write-Host "Generating file '$FileName'"
+Write-DfsrHealthReport -GroupName "$GroupName" -ReferenceComputerName "$SourceComputerName" -MemberComputerName "$SourceComputerName","$DestinationComputerName" -Path "$OutputPath" -DomainName "$DomainName" -CountFiles
+
+#."C:\Program Files\Internet Explorer\iexplore.exe" "$FileName"

@@ -30,10 +30,11 @@ Add-Type @"
   using System;
   public class BacklogItemType
   {
-    public string SourceComputerName;
-    public string DestinationComputerName;
-    public string FileName;
-    public string FullPathName;
+    public string   SourceComputerName;
+    public string   DestinationComputerName;
+    public string   FileName;
+    public string   FullPathName;
+    public long     FileSize;
     public DateTime CreateTime;
     public DateTime UpdateTime;
     public TimeSpan BacklogAge
@@ -90,6 +91,8 @@ foreach ($ReplicationGroup in $ReplicationGroups)
     Write-Host "DestinationComputer = '$DestinationComputer'"
   }
 
+  [long] $TotalBacklogBytes = 0
+
   foreach ($ReplicationGroupMember_Outer in $ReplicationGroupMembers)
   {
     if (($SourceComputer -eq "*") -or ($ReplicationGroupMember_Outer.ComputerName.ToLower() -eq $SourceComputer.ToLower()))
@@ -110,13 +113,41 @@ foreach ($ReplicationGroup in $ReplicationGroups)
             foreach ($Backlog in $Backlogs)
             {
               $BacklogItem = New-Object BacklogItemType
-              $BacklogItem.SourceComputerName = "$($ReplicationGroupMember_Outer.ComputerName)"
+
+              $BacklogItem.SourceComputerName      = "$($ReplicationGroupMember_Outer.ComputerName)"
               $BacklogItem.DestinationComputerName = "$($ReplicationGroupMember_Inner.ComputerName)"
-              $BacklogItem.FileName = $Backlog.FileName
-              $BacklogItem.FullPathName = $Backlog.FullPathName
-              $BacklogItem.CreateTime = $Backlog.CreateTime
-              $BacklogItem.UpdateTime = $Backlog.UpdateTime
-            
+              $BacklogItem.FileName                = $Backlog.FileName
+              $BacklogItem.FullPathName            = $Backlog.FullPathName
+              $BacklogItem.FileSize                = 0
+              $BacklogItem.CreateTime              = $Backlog.CreateTime
+              $BacklogItem.UpdateTime              = $Backlog.UpdateTime
+
+              if ($BacklogItem.FullPathName -ne "")
+              {
+                $SourceComputerName1 = $BacklogItem.SourceComputerName
+          
+                $FileName  = "$($Backlog.FullPathName)"
+                $FileName  = "$($FileName.Replace('C:', 'C$'))"
+                $FileName  = "$($FileName.Replace('D:', 'D$'))"
+                $FileName  = "$($FileName.Replace('E:', 'E$'))"
+                $FileName  = "$($FileName.Replace('F:', 'F$'))"
+                $FileName  = "$($FileName.Replace('G:', 'G$'))"
+                $FileName  = "$($FileName.Replace('H:', 'H$'))"
+          
+                $FileName1 = "\\$SourceComputerName1\$FileName"
+          
+                $FileSize = 0
+          
+                if([System.IO.File]::Exists($FileName1))
+                {
+                  $FileSize = (Get-Item "$FileName1").Length
+                }
+          
+                $BacklogItem.FullPathName = $FileName1
+                $BacklogItem.FileSize = $FileSize
+              }
+
+              $TotalBacklogBytes += $FileSize
               $BacklogItems += $BacklogItem
             }
           }
@@ -154,6 +185,7 @@ else
         @{Label="Destination"; Expression={ $($_.DestinationComputerName)}; align='left' },
         @{Label="Backlog Age"; Expression={ $($_.BacklogAge.ToString("dd\.hh\:mm\:ss")) }; align='left' },
         @{Label="File"; Expression={ $($_.FileName)}; align='left' },
+        @{Label="File Size"; Expression={ $($_.FileSize)}; align='right' },
         @{Label="Create Time/Time"; Expression={ $($_.CreateTime.ToString("MM-dd-yyyy HH:mm:ss")) }; align='left' },
         @{Label="Update Date/Time"; Expression={ $($_.UpdateTime.ToString("MM-dd-yyyy HH:mm:ss")) }; align='left' },
         @{Label="Summary"; Expression={ $($_.Summary)}; align='left' },
@@ -161,7 +193,9 @@ else
 
     $BacklogItems | Sort-Object BacklogDays | Group-Object -Property BacklogDays | Select-Object Name, Count | Format-Table @{Label="Backlog Days"; Expression={$_.Name}; Align='Right'}, Count
   }
-  Write-Host "Total Backlog Entries Found: $($BacklogItems.Count)" -ForegroundColor Yellow
+
+  Write-Host "Total Backlog Entries Found..: $($BacklogItems.Count)" -ForegroundColor Yellow
+  Write-Host "Total Backlog Size...........: $($TotalBacklogBytes.ToString('###,###,###,###')) bytes  --  $($($TotalBacklogBytes / (1024*1024)).ToString('#,###.00')) MB  --  $($($TotalBacklogBytes / (1024*1024*1024)).ToString('#,###.00')) GB" -ForegroundColor Yellow
   Write-Host
   Write-Host
 }

@@ -66,25 +66,44 @@ foreach ($ComputerName in $ComputerNames)
 
     if ($Result.Path -ne "")
     {
-      $SourceComputerName = $ComputerName
-      if (($Result.SourceComputerName -ne "") -and ($Result.UpdateState -ne "Waiting"))
-      {
-        $SourceComputerName = $Result.SourceComputerName
-      }
-      $FileName = "\\$SourceComputerName\$($DFSRStateItem.Path.Replace(':', '$'))"
+      $SourceComputerName1 = $ComputerName
+      $SourceComputerName2 = $Result.SourceComputerName
+
+      $FileName  = "$($DFSRStateItem.Path)"
+      $FileName  = "$($FileName.Replace('C:', 'C$'))"
+      $FileName  = "$($FileName.Replace('D:', 'D$'))"
+      $FileName  = "$($FileName.Replace('E:', 'E$'))"
+      $FileName  = "$($FileName.Replace('F:', 'F$'))"
+      $FileName  = "$($FileName.Replace('G:', 'G$'))"
+      $FileName  = "$($FileName.Replace('H:', 'H$'))"
+
+      $FileName1 = "\\$SourceComputerName1\$FileName"
+      $FileName2 = "\\$SourceComputerName2\$FileName"
+
       $FileSize = 0
-      if([System.IO.File]::Exists($FileName))
+
+      if([System.IO.File]::Exists($FileName1))
       {
-        $FileSize = (Get-Item "$FileName").Length
+        $FileSize = (Get-Item "$FileName1").Length
       }
+      else
+      {
+        if([System.IO.File]::Exists($FileName2))
+        {
+          $FileSize = (Get-Item "$FileName2").Length
+        }
+      }
+
       $DFSRStateItem.FileSize = $FileSize
     }
 
     $DFSRStateItems += $DFSRStateItem
   }
 }
+
 if ($ShowDetail -eq $true)
 {
   $DFSRStateItems | Sort-Object Inbound, UpdateState -Descending | Format-Table ComputerName, FileName, FileSize, UpdateState, Inbound, SourceComputerName, Path -auto
 }
+
 $DFSRStateItems | Group-Object ComputerName, UpdateState | Select Name, Count | Sort-Object Name | Format-Table -AutoSize

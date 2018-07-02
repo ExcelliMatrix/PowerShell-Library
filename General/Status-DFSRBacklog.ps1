@@ -185,7 +185,7 @@ else
         @{Label="Destination"; Expression={ $($_.DestinationComputerName)}; align='left' },
         @{Label="Backlog Age"; Expression={ $($_.BacklogAge.ToString("dd\.hh\:mm\:ss")) }; align='left' },
         @{Label="File"; Expression={ $($_.FileName)}; align='left' },
-        @{Label="File Size"; Expression={ $($_.FileSize)}; align='right' },
+        @{Label="File Size"; Expression={ $($($_.FileSize / (1024*1024)).ToString("###,###,###,##0.0000 MB"))}; align='right' },
         @{Label="Create Time/Time"; Expression={ $($_.CreateTime.ToString("MM-dd-yyyy HH:mm:ss")) }; align='left' },
         @{Label="Update Date/Time"; Expression={ $($_.UpdateTime.ToString("MM-dd-yyyy HH:mm:ss")) }; align='left' },
         @{Label="Summary"; Expression={ $($_.Summary)}; align='left' },
